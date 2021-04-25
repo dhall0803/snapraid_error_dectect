@@ -3,6 +3,10 @@ import logging
 import subprocess
 import json
 
+#You need to create a config.json file with the following keys:
+#"toEmail" with the email you want to send the error notification to
+#"fromEmail" with the email address that is sending the notification
+
 #load configuration
 with open("config.json", "r") as config_file:
     config = json.loads(config_file.read())
