@@ -1,0 +1,11 @@
+{
+    "email": {
+        "enabled": true,
+        "toEmail": "recipient@example.com",
+        "fromEmail": "service@example.com"
+    },
+    "telegram": {
+        "enabled": true,
+        "secrets_file_path": "/path/.secret"
+    }
+}
