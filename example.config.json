@@ -6,10 +6,6 @@
     },
     "telegram": {
         "enabled": true,
-        "environmentVariables": {
-            "enabled": true,
-            "api_key_var": "BOT_TOKEN_KEY",
-            "chat_id_var": "CHAT_ID_VAR"
-        }
+        "secrets_file_path": "/path/.secret"
     }
 }

@@ -9,15 +9,25 @@ import requests
 #"toEmail" with the email you want to send the error notification to
 #"fromEmail" with the email address that is sending the notification
 
+#configure logging:
+logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s',level=logging.INFO, filename="log.txt")
+
+config = ""
+email_enabled = False
+telegram_enabled = False
+
 #load configuration
 with open("config.json", "r") as config_file:
     config = json.loads(config_file.read())
+try:
+    email_enabled = config["email"]["enabled"]
+except:
+    logging.info("Email notifications not enabled")
 
-email_enabled = config["email"]["enabled"]
-telegram_enabled = config["telegram"]["enabled"]
-
-#configure logging:
-logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s',level=logging.INFO, filename="log.txt")
+try:
+    telegram_enabled = config["telegram"]["enabled"]
+except:
+    logging.info("Telegram notifications not enabled")
 
 try:
     #Start script
@@ -30,6 +40,12 @@ try:
     #Open status.txt and look for the string "No error detected": if it is found, do nothing, else send a notification saying an error
     #has been detected
     logging.info("Checking result for errors...")
+
+    # #Used for testing:
+    # with open("status.txt", "w") as f:
+    #     f.write("Bad status!")
+    # #End of used for testing
+
     with open("status.txt", "r") as f:
         if not "No error detected.\n" in f.readlines():
             logging.warning("Error detected in status.txt")
@@ -41,19 +57,27 @@ try:
                 logging.info("Email sent")
             if telegram_enabled:
                 logging.info("Sending telegram notification")
-                telegram_bot_token = os.environ[config["telegram"]["environmentVariables"]["bot_token_var"]]
-                telegram_chat_id = os.environ[config["telegram"]["environmentVariables"]["chat_id_var"]]
+                telegram_bot_token = ""
+                telegram_chat_id  = ""
+
+                with open(config["telegram"]["secrets_file_path"]) as secrets_file:
+                    secrets = json.loads(secrets_file.read())
+                    telegram_bot_token = secrets["bot_token"]
+                    telegram_chat_id = secrets["chat_id"]
+
                 queryParams = {
-                    "chatId": telegram_chat_id,
+                    "chat_id": telegram_chat_id,
                     "text": f"WARNING! Snapraid errors detected!\n\n{f.read()}" 
                 }
-                url = f"https://api.telegram.org/bot{telegram_bot_token}"
+
+                url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
                 response = requests.get(url, queryParams)
-                if response.status_code is not 200:
+
+                if response.status_code != 200:
                     logging.error(f"{response.status_code} received sending telegram notifcation")
-                    logging.error(f"{str.encode(response.content)})")
+                    logging.error(f"{response.content})")
 
         else:
             logging.info("No errors detected")
 except Exception as e:
-    logging.error(e)
+    logging.error(e.with_traceback(None))
